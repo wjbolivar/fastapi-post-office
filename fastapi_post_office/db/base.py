@@ -7,4 +7,5 @@ class Base(DeclarativeBase):
     """
     SQLAlchemy declarative base for FastAPI Post Office models.
     """
+
     pass

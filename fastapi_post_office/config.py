@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -23,10 +22,15 @@ class Settings(BaseSettings):
     # Environment
     env: str = Field(default="development", description="development|staging|production")
 
+    # Database
+    database_url: str = Field(default="sqlite+pysqlite:///./fapo.db")
+
     # Backend selection
-    email_backend: str = Field(default="console", description="console|smtp|ses|sendgrid|postmark|mailgun")
+    email_backend: str = Field(
+        default="console", description="console|smtp|ses|sendgrid|postmark|mailgun"
+    )
     default_from: str = Field(default="no-reply@example.com")
-    default_reply_to: Optional[str] = None
+    default_reply_to: str | None = None
 
     # Template rules
     strict_template_vars: bool = True
@@ -34,7 +38,7 @@ class Settings(BaseSettings):
 
     # Retry policy (seconds)
     max_attempts: int = 3
-    retry_schedule_seconds: List[int] = Field(default_factory=lambda: [0, 60, 120])
+    retry_schedule_seconds: list[int] = Field(default_factory=lambda: [0, 60, 120])
 
     # Retention / logging
     retention_days: int = 30
@@ -42,16 +46,22 @@ class Settings(BaseSettings):
     persist_context: bool = False  # off by default (security)
 
     # Admin (dev only)
-    admin_mode: str = Field(default="disabled", description="disabled|local_only|dev_public|secured")
+    admin_mode: str = Field(
+        default="disabled", description="disabled|local_only|dev_public|secured"
+    )
     allow_insecure_admin: bool = False
 
     # SMTP settings (only used by SMTP backend)
-    smtp_host: Optional[str] = None
+    smtp_host: str | None = None
     smtp_port: int = 587
-    smtp_username: Optional[str] = None
-    smtp_password: Optional[str] = None
+    smtp_username: str | None = None
+    smtp_password: str | None = None
     smtp_starttls: bool = True
     smtp_timeout_seconds: int = 10
+
+    # Celery settings
+    celery_broker_url: str | None = None
+    celery_backend_url: str | None = None
 
     @field_validator("env")
     @classmethod
@@ -72,7 +82,7 @@ class Settings(BaseSettings):
 
     @field_validator("retry_schedule_seconds")
     @classmethod
-    def validate_retry_schedule(cls, v: List[int]) -> List[int]:
+    def validate_retry_schedule(cls, v: list[int]) -> list[int]:
         if not v:
             raise ValueError("retry_schedule_seconds must not be empty")
         if any(x < 0 for x in v):
@@ -104,9 +114,8 @@ class Settings(BaseSettings):
                 "FAPO_ADMIN_MODE=dev_public requires FAPO_ALLOW_INSECURE_ADMIN=true (explicit opt-in)"
             )
 
-        if self.email_backend == "smtp":
-            if not self.smtp_host:
-                raise RuntimeError("SMTP backend selected but FAPO_SMTP_HOST is not set")
+        if self.email_backend == "smtp" and not self.smtp_host:
+            raise RuntimeError("SMTP backend selected but FAPO_SMTP_HOST is not set")
             # Username/password may be optional for some SMTP relays; keep flexible.
 
 
