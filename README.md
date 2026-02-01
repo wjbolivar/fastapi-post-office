@@ -1,5 +1,11 @@
 # FastAPI Post Office 📬
 
+![CI](https://github.com/wjbolivar/fastapi-post-office/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
+![Coverage](https://img.shields.io/badge/coverage-87.32%25-brightgreen.svg)
+
+
 FastAPI Post Office is a production-ready email delivery library for FastAPI and Python applications.
 
 It brings Django Post Office–level reliability to the FastAPI ecosystem by combining file-based, versioned templates with database persistence, Celery-powered async delivery, retry policies, and pluggable email providers.

@@ -54,6 +54,7 @@ class EmailService:
         to_list = validate_recipients("to", to)
         cc_list = validate_recipients("cc", cc) if cc else []
         bcc_list = validate_recipients("bcc", bcc) if bcc else []
+        self._ensure_not_suppressed(to_list + cc_list + bcc_list)
 
         message = EmailMessage(
             template_name=composed.template_name,
@@ -95,6 +96,7 @@ class EmailService:
         to_list = validate_recipients("to", to)
         cc_list = validate_recipients("cc", cc) if cc else []
         bcc_list = validate_recipients("bcc", bcc) if bcc else []
+        self._ensure_not_suppressed(to_list + cc_list + bcc_list)
 
         if not html and not text:
             raise ValueError("Either html or text body is required")
@@ -161,6 +163,13 @@ class EmailService:
 
         self.repo.commit()
         return message
+
+    def _ensure_not_suppressed(self, recipients: list[str]) -> None:
+        if not settings.block_suppressed:
+            return
+        for email in recipients:
+            if self.repo.is_suppressed(email):
+                raise ValueError(f"Recipient suppressed: {email}")
 
 
 def _template_source_from_db(template: EmailTemplate) -> TemplateSource:

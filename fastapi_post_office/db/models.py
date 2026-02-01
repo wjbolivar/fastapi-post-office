@@ -76,3 +76,26 @@ class EmailMessage(Base):
     idempotency_key: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class SuppressionReason(str, Enum):
+    BOUNCE = "BOUNCE"
+    COMPLAINT = "COMPLAINT"
+    MANUAL = "MANUAL"
+
+
+class EmailSuppression(Base):
+    __tablename__ = "email_suppressions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        default=uuid.uuid4, primary_key=True, unique=True, nullable=False
+    )
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    reason: Mapped[SuppressionReason] = mapped_column(
+        SAEnum(SuppressionReason, name="suppression_reason"),
+        default=SuppressionReason.MANUAL,
+        nullable=False,
+    )
+    provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    metadata_json: Mapped[dict[str, Any] | None] = mapped_column(_json_type(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
