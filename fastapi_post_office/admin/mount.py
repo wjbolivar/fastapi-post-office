@@ -15,7 +15,9 @@ def mount_admin(app, engine) -> None:
     try:
         from sqladmin import Admin, ModelView
     except Exception as exc:  # pragma: no cover - optional dependency
-        raise RuntimeError("sqladmin is not installed. Install with fastapi-post-office[admin].") from exc
+        raise RuntimeError(
+            "sqladmin is not installed. Install with fastapi-post-office[admin]."
+        ) from exc
 
     from fastapi_post_office.db.models import EmailMessage, EmailTemplate
 

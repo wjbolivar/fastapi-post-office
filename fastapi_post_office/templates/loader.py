@@ -58,7 +58,9 @@ def load_template_dir(path: Path, max_bytes: int) -> TemplateSource:
     if size > max_bytes:
         raise TemplateLoadError(f"Template size exceeds limit ({max_bytes} bytes) in {path}")
 
-    source_hash = compute_source_hash(manifest_path, subject_path, path / "html.j2", path / "text.j2")
+    source_hash = compute_source_hash(
+        manifest_path, subject_path, path / "html.j2", path / "text.j2"
+    )
 
     return TemplateSource(
         manifest=manifest,

@@ -16,7 +16,7 @@ def test_load_template_missing_subject(tmp_path):
     tdir = tmp_path / "x"
     tdir.mkdir()
     (tdir / "manifest.json").write_text(
-        "{\"name\":\"x\",\"revision\":1,\"description\":\"x\",\"required_vars\":[]}",
+        '{"name":"x","revision":1,"description":"x","required_vars":[]}',
         encoding="utf-8",
     )
     with pytest.raises(TemplateLoadError):

@@ -12,7 +12,9 @@ def get_celery_app() -> Celery:
     try:
         from celery import Celery
     except Exception as exc:  # pragma: no cover - optional dependency
-        raise RuntimeError("Celery is not installed. Install with fastapi-post-office[celery].") from exc
+        raise RuntimeError(
+            "Celery is not installed. Install with fastapi-post-office[celery]."
+        ) from exc
 
     broker = settings.celery_broker_url
     backend = settings.celery_backend_url

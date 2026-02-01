@@ -26,7 +26,9 @@ class Settings(BaseSettings):
     database_url: str = Field(default="sqlite+pysqlite:///./fapo.db")
 
     # Backend selection
-    email_backend: str = Field(default="console", description="console|smtp|ses|sendgrid|postmark|mailgun")
+    email_backend: str = Field(
+        default="console", description="console|smtp|ses|sendgrid|postmark|mailgun"
+    )
     default_from: str = Field(default="no-reply@example.com")
     default_reply_to: str | None = None
 
@@ -44,7 +46,9 @@ class Settings(BaseSettings):
     persist_context: bool = False  # off by default (security)
 
     # Admin (dev only)
-    admin_mode: str = Field(default="disabled", description="disabled|local_only|dev_public|secured")
+    admin_mode: str = Field(
+        default="disabled", description="disabled|local_only|dev_public|secured"
+    )
     allow_insecure_admin: bool = False
 
     # SMTP settings (only used by SMTP backend)

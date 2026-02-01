@@ -30,8 +30,11 @@ class SMTPBackend(EmailBackend):
         else:
             msg.set_content(message.text_body or "")
 
+        host = settings.smtp_host or ""
         try:
-            with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=settings.smtp_timeout_seconds) as client:
+            with smtplib.SMTP(
+                host, settings.smtp_port, timeout=settings.smtp_timeout_seconds
+            ) as client:
                 if settings.smtp_starttls:
                     client.starttls()
                 if settings.smtp_username and settings.smtp_password:

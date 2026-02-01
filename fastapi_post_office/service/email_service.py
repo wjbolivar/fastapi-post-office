@@ -36,7 +36,7 @@ class EmailService:
     ) -> EmailMessage:
         existing = ensure_idempotency(self.repo, idempotency_key)
         if existing is not None:
-            return existing
+            return _ensure_message(existing)
 
         template = self.repo.get_template(template_name, active_only=True)
         if template is None:
@@ -89,7 +89,7 @@ class EmailService:
     ) -> EmailMessage:
         existing = ensure_idempotency(self.repo, idempotency_key)
         if existing is not None:
-            return existing
+            return _ensure_message(existing)
 
         from_email_val = validate_from(from_email or settings.default_from)
         to_list = validate_recipients("to", to)
@@ -179,6 +179,12 @@ def _template_source_from_db(template: EmailTemplate) -> TemplateSource:
         text_template=template.text_template,
         source_hash=template.source_hash,
     )
+
+
+def _ensure_message(message: Any) -> EmailMessage:
+    if not isinstance(message, EmailMessage):
+        raise TypeError("Idempotency lookup returned invalid message type")
+    return message
 
 
 def _next_attempt_at(attempt_count: int) -> datetime:

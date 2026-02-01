@@ -84,7 +84,8 @@ class EmailRepository:
             and_(EmailMessage.status == EmailStatus.SENT, EmailMessage.sent_at <= cutoff)
         )
         result = self.session.execute(stmt)
-        return result.rowcount or 0
+        rowcount = getattr(result, "rowcount", None)
+        return int(rowcount or 0)
 
     def commit(self) -> None:
         self.session.commit()

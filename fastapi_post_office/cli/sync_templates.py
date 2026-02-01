@@ -50,10 +50,11 @@ def sync_templates_command(path: str, upsert: bool) -> None:
             existing = repo.get_template(source.manifest.name, active_only=False)
             if existing:
                 if source.manifest.revision < existing.revision:
-                    raise SyncError(
-                        f"Template {source.manifest.name} revision is lower than DB"
-                    )
-                if source.manifest.revision == existing.revision and source.source_hash != existing.source_hash:
+                    raise SyncError(f"Template {source.manifest.name} revision is lower than DB")
+                if (
+                    source.manifest.revision == existing.revision
+                    and source.source_hash != existing.source_hash
+                ):
                     raise SyncError(
                         f"Template {source.manifest.name} changed without revision bump"
                     )

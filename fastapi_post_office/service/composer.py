@@ -22,7 +22,9 @@ def compose_from_template(
     strict: bool,
     max_bytes: int,
 ) -> ComposedEmail:
-    rendered: RenderedTemplate = render_template(source, context, strict=strict, max_bytes=max_bytes)
+    rendered: RenderedTemplate = render_template(
+        source, context, strict=strict, max_bytes=max_bytes
+    )
     return ComposedEmail(
         template_name=source.manifest.name,
         template_revision=source.manifest.revision,

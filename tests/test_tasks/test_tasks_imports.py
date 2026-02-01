@@ -14,6 +14,7 @@ def test_celery_app_requires_broker_or_dependency():
     settings.celery_broker_url = None
     try:
         import celery  # noqa: F401
+
         expected = "FAPO_CELERY_BROKER_URL"
     except Exception:
         expected = "Celery is not installed"

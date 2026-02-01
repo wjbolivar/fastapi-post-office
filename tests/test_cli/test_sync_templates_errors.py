@@ -11,7 +11,7 @@ def _make_template(root, revision: int, subject: str):
     tdir = root / "welcome_user"
     tdir.mkdir(parents=True, exist_ok=True)
     (tdir / "manifest.json").write_text(
-        f"{{\"name\":\"welcome_user\",\"revision\":{revision},\"description\":\"Welcome\",\"required_vars\":[\"first_name\"]}}",
+        f'{{"name":"welcome_user","revision":{revision},"description":"Welcome","required_vars":["first_name"]}}',
         encoding="utf-8",
     )
     (tdir / "subject.j2").write_text(subject, encoding="utf-8")
