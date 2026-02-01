@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # Environment
     env: str = Field(default="development", description="development|staging|production")
 
+    # Database
+    database_url: str = Field(default="sqlite+pysqlite:///./fapo.db")
+
     # Backend selection
     email_backend: str = Field(default="console", description="console|smtp|ses|sendgrid|postmark|mailgun")
     default_from: str = Field(default="no-reply@example.com")
@@ -52,6 +55,10 @@ class Settings(BaseSettings):
     smtp_password: Optional[str] = None
     smtp_starttls: bool = True
     smtp_timeout_seconds: int = 10
+
+    # Celery settings
+    celery_broker_url: Optional[str] = None
+    celery_backend_url: Optional[str] = None
 
     @field_validator("env")
     @classmethod
