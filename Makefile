@@ -1,32 +1,63 @@
-.PHONY: help install lint format typecheck test coverage clean
+# -----------------------------
+# FastAPI Post Office - Makefile
+# Always uses local .venv
+# -----------------------------
+
+VENV_DIR ?= .venv
+PYTHON ?= $(VENV_DIR)/bin/python
+PIP ?= $(PYTHON) -m pip
+PYTEST ?= $(PYTHON) -m pytest
+RUFF ?= $(PYTHON) -m ruff
+BLACK ?= $(PYTHON) -m black
+MYPY ?= $(PYTHON) -m mypy
+
+# If python3 isn't available, users will see a clear error.
+SYSTEM_PYTHON ?= python3
+
+.PHONY: help venv upgrade-pip install lint format fmt-check typecheck test coverage clean
 
 help:
-	@echo "Available commands:"
-	@echo "  install     Install dev dependencies"
-	@echo "  lint        Run ruff"
-	@echo "  format      Format code with black"
-	@echo "  typecheck   Run mypy"
-	@echo "  test        Run tests"
-	@echo "  coverage    Run tests with coverage report"
-	@echo "  clean       Remove cache files"
+	@echo "Targets:"
+	@echo "  venv         Create .venv and install pip"
+	@echo "  install      Install dev dependencies into .venv"
+	@echo "  lint         Run ruff"
+	@echo "  format       Run black formatter"
+	@echo "  fmt-check    Check formatting"
+	@echo "  typecheck    Run mypy"
+	@echo "  test         Run pytest"
+	@echo "  coverage     Run pytest with coverage"
+	@echo "  clean        Remove caches"
 
-install:
-	pip install -e ".[dev,smtp,celery,admin]"
+# Create venv if missing
+$(VENV_DIR)/bin/python:
+	$(SYSTEM_PYTHON) -m venv $(VENV_DIR)
 
-lint:
-	ruff check fastapi_post_office tests
+venv: $(VENV_DIR)/bin/python
+	@echo "✅ Virtualenv ready at $(VENV_DIR)"
 
-format:
-	black fastapi_post_office tests
+upgrade-pip: $(VENV_DIR)/bin/python
+	$(PIP) install -U pip
 
-typecheck:
-	mypy fastapi_post_office
+install: venv upgrade-pip
+	$(PIP) install -e ".[dev,smtp,celery,admin]"
 
-test:
-	pytest
+lint: venv
+	$(RUFF) check fastapi_post_office tests
 
-coverage:
-	pytest --cov=fastapi_post_office --cov-report=term-missing
+format: venv
+	$(BLACK) fastapi_post_office tests
+
+fmt-check: venv
+	$(BLACK) --check fastapi_post_office tests
+
+typecheck: venv
+	$(MYPY) fastapi_post_office
+
+test: venv
+	$(PYTEST)
+
+coverage: venv
+	$(PYTEST) --cov=fastapi_post_office --cov-report=term-missing
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
