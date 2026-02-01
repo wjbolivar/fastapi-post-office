@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
 
-from .models import EmailMessage, EmailStatus, EmailTemplate
+from .models import EmailMessage, EmailStatus, EmailSuppression, EmailTemplate, SuppressionReason
 
 
 class EmailRepository:
@@ -45,6 +45,30 @@ class EmailRepository:
     def get_message_by_idempotency(self, key: str) -> EmailMessage | None:
         stmt = select(EmailMessage).where(EmailMessage.idempotency_key == key)
         return self.session.execute(stmt).scalar_one_or_none()
+
+    def is_suppressed(self, email: str) -> bool:
+        stmt = select(EmailSuppression).where(EmailSuppression.email == email.lower())
+        return self.session.execute(stmt).scalar_one_or_none() is not None
+
+    def add_suppression(
+        self,
+        email: str,
+        reason: SuppressionReason,
+        provider: str | None = None,
+        metadata: dict | None = None,
+    ) -> EmailSuppression:
+        suppression = EmailSuppression(
+            email=email.lower(),
+            reason=reason,
+            provider=provider,
+            metadata_json=metadata,
+        )
+        self.session.add(suppression)
+        return suppression
+
+    def remove_suppression(self, email: str) -> None:
+        stmt = delete(EmailSuppression).where(EmailSuppression.email == email.lower())
+        self.session.execute(stmt)
 
     def set_status(
         self,

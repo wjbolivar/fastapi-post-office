@@ -63,6 +63,18 @@ class Settings(BaseSettings):
     celery_broker_url: str | None = None
     celery_backend_url: str | None = None
 
+    # Provider API settings (v1.1)
+    sendgrid_api_key: str | None = None
+    sendgrid_base_url: str = "https://api.sendgrid.com/v3/mail/send"
+    postmark_server_token: str | None = None
+    postmark_base_url: str = "https://api.postmarkapp.com/email"
+    sendpulse_api_token: str | None = None
+    sendpulse_base_url: str = "https://api.sendpulse.com/smtp/emails"
+    sendpulse_from_name: str | None = None
+
+    # Suppression list
+    block_suppressed: bool = True
+
     @field_validator("env")
     @classmethod
     def validate_env(cls, v: str) -> str:
@@ -75,7 +87,7 @@ class Settings(BaseSettings):
     @classmethod
     def validate_backend(cls, v: str) -> str:
         v = v.lower().strip()
-        allowed = {"console", "smtp", "ses", "sendgrid", "postmark", "mailgun"}
+        allowed = {"console", "smtp", "ses", "sendgrid", "postmark", "mailgun", "sendpulse"}
         if v not in allowed:
             raise ValueError(f"email_backend must be one of: {sorted(allowed)}")
         return v
