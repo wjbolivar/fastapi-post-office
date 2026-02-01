@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from fastapi_post_office.cli.sync_templates import sync_templates_command
-from fastapi_post_office.db import Base, EmailRepository, create_engine_from_url, create_session_factory
 from fastapi_post_office.config import settings
+from fastapi_post_office.db import (
+    Base,
+    EmailRepository,
+    create_engine_from_url,
+    create_session_factory,
+)
 
 
 def test_sync_templates_command(template_dir, tmp_path):

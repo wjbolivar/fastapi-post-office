@@ -5,7 +5,12 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 from fastapi_post_office.config import settings
-from fastapi_post_office.db import Base, EmailRepository, create_engine_from_url, create_session_factory
+from fastapi_post_office.db import (
+    Base,
+    EmailRepository,
+    create_engine_from_url,
+    create_session_factory,
+)
 from fastapi_post_office.db.models import EmailMessage, EmailStatus
 
 

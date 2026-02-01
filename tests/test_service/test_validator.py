@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from fastapi_post_office.service.validator import ValidationError, validate_from, validate_recipients, validate_subject
+from fastapi_post_office.service.validator import (
+    ValidationError,
+    validate_from,
+    validate_recipients,
+    validate_subject,
+)
 
 
 def test_validate_recipients_ok():

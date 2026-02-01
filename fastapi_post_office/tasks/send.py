@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
-
 import uuid
+from contextlib import contextmanager
 
 from fastapi_post_office.config import settings
 from fastapi_post_office.db import EmailRepository, create_engine_from_url, create_session_factory

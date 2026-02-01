@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 
-
 DEFAULT_PATTERNS = [
     re.compile(r"(?i)password=[^&\s]+"),
     re.compile(r"(?i)token=[^&\s]+"),

@@ -5,7 +5,12 @@ from pathlib import Path
 import typer
 
 from fastapi_post_office.config import settings
-from fastapi_post_office.db import EmailRepository, EmailTemplate, create_engine_from_url, create_session_factory
+from fastapi_post_office.db import (
+    EmailRepository,
+    EmailTemplate,
+    create_engine_from_url,
+    create_session_factory,
+)
 from fastapi_post_office.templates.loader import TemplateLoadError, load_templates
 
 

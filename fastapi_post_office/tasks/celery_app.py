@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING
 
 from fastapi_post_office.config import settings
 
+if TYPE_CHECKING:
+    from celery import Celery
 
-def get_celery_app() -> "Celery":
+
+def get_celery_app() -> Celery:
     try:
         from celery import Celery
     except Exception as exc:  # pragma: no cover - optional dependency

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
-from typing import Iterable, Optional
 
 from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import Session
@@ -13,7 +13,7 @@ class EmailRepository:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def get_template(self, name: str, active_only: bool = True) -> Optional[EmailTemplate]:
+    def get_template(self, name: str, active_only: bool = True) -> EmailTemplate | None:
         stmt = select(EmailTemplate).where(EmailTemplate.name == name)
         if active_only:
             stmt = stmt.where(EmailTemplate.is_active.is_(True))
@@ -39,10 +39,10 @@ class EmailRepository:
         self.session.add(message)
         return message
 
-    def get_message(self, message_id) -> Optional[EmailMessage]:
+    def get_message(self, message_id) -> EmailMessage | None:
         return self.session.get(EmailMessage, message_id)
 
-    def get_message_by_idempotency(self, key: str) -> Optional[EmailMessage]:
+    def get_message_by_idempotency(self, key: str) -> EmailMessage | None:
         stmt = select(EmailMessage).where(EmailMessage.idempotency_key == key)
         return self.session.execute(stmt).scalar_one_or_none()
 
@@ -50,10 +50,10 @@ class EmailRepository:
         self,
         message: EmailMessage,
         status: EmailStatus,
-        error_message: Optional[str] = None,
-        provider_message_id: Optional[str] = None,
-        sent_at: Optional[datetime] = None,
-        next_attempt_at: Optional[datetime] = None,
+        error_message: str | None = None,
+        provider_message_id: str | None = None,
+        sent_at: datetime | None = None,
+        next_attempt_at: datetime | None = None,
     ) -> EmailMessage:
         message.status = status
         message.last_error_message = error_message
@@ -66,7 +66,7 @@ class EmailRepository:
         message.attempt_count += 1
         return message
 
-    def list_due_messages(self, now: Optional[datetime] = None) -> list[EmailMessage]:
+    def list_due_messages(self, now: datetime | None = None) -> list[EmailMessage]:
         if now is None:
             now = datetime.now(timezone.utc)
         stmt = select(EmailMessage).where(

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from fastapi_post_office.backends.base import SendResult
 from fastapi_post_office.db.models import EmailMessage, EmailStatus
 from fastapi_post_office.service import EmailService

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-import uuid
 from pathlib import Path
 
 import pytest
 
 from fastapi_post_office.config import settings
-from fastapi_post_office.db import Base, EmailRepository, create_engine_from_url, create_session_factory
+from fastapi_post_office.db import (
+    Base,
+    EmailRepository,
+    create_engine_from_url,
+    create_session_factory,
+)
 
 
 @pytest.fixture()

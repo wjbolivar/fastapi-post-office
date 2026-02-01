@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
-from typing import Any, Iterable, Optional
+from typing import Any
 
 from fastapi_post_office.backends import get_backend
 from fastapi_post_office.config import settings
@@ -9,7 +10,11 @@ from fastapi_post_office.db.models import EmailMessage, EmailStatus, EmailTempla
 from fastapi_post_office.db.repository import EmailRepository
 from fastapi_post_office.service.composer import compose_from_template
 from fastapi_post_office.service.idempotency import ensure_idempotency
-from fastapi_post_office.service.validator import validate_from, validate_recipients, validate_subject
+from fastapi_post_office.service.validator import (
+    validate_from,
+    validate_recipients,
+    validate_subject,
+)
 from fastapi_post_office.templates.loader import TemplateSource
 from fastapi_post_office.templates.manifest import TemplateManifest
 
@@ -25,9 +30,9 @@ class EmailService:
         to: Iterable[str],
         context: dict[str, Any],
         idempotency_key: str,
-        cc: Optional[Iterable[str]] = None,
-        bcc: Optional[Iterable[str]] = None,
-        from_email: Optional[str] = None,
+        cc: Iterable[str] | None = None,
+        bcc: Iterable[str] | None = None,
+        from_email: str | None = None,
     ) -> EmailMessage:
         existing = ensure_idempotency(self.repo, idempotency_key)
         if existing is not None:
@@ -75,12 +80,12 @@ class EmailService:
         self,
         to: Iterable[str],
         subject: str,
-        html: Optional[str],
-        text: Optional[str],
+        html: str | None,
+        text: str | None,
         idempotency_key: str,
-        cc: Optional[Iterable[str]] = None,
-        bcc: Optional[Iterable[str]] = None,
-        from_email: Optional[str] = None,
+        cc: Iterable[str] | None = None,
+        bcc: Iterable[str] | None = None,
+        from_email: str | None = None,
     ) -> EmailMessage:
         existing = ensure_idempotency(self.repo, idempotency_key)
         if existing is not None:

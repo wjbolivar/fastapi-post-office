@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 from fastapi_post_office.config import settings
 
 
@@ -18,10 +20,18 @@ def mount_admin(app, engine) -> None:
     from fastapi_post_office.db.models import EmailMessage, EmailTemplate
 
     class EmailTemplateAdmin(ModelView, model=EmailTemplate):
-        column_list = [EmailTemplate.name, EmailTemplate.revision, EmailTemplate.is_active]
+        column_list: ClassVar[list] = [
+            EmailTemplate.name,
+            EmailTemplate.revision,
+            EmailTemplate.is_active,
+        ]
 
     class EmailMessageAdmin(ModelView, model=EmailMessage):
-        column_list = [EmailMessage.id, EmailMessage.status, EmailMessage.template_name]
+        column_list: ClassVar[list] = [
+            EmailMessage.id,
+            EmailMessage.status,
+            EmailMessage.template_name,
+        ]
 
     admin = Admin(app, engine)
     admin.add_view(EmailTemplateAdmin)
