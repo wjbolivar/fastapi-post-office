@@ -12,14 +12,7 @@
 **FastAPI Post Office** is a production-grade library for managing **transactional email delivery**
 in FastAPI and Python applications.
 
-It treats email as **core infrastructure**, not as a side-effect, combining:
-
-- file-based, versioned templates (Git as source of truth)
-- database-backed message lifecycle
-- Celery-powered asynchronous delivery
-- deterministic retry policies
-- pluggable email providers
-
+It treats email as **core infrastructure**.
 
 
 ---
@@ -38,41 +31,6 @@ FastAPI Post Office focuses on the **entire lifecycle**:
 
 This makes it suitable for **real production systems**, regulated environments,
 and long-running platforms where email delivery must be predictable and traceable.
-
----
-
-## Key Features
-
-- **Versioned templates (Git-first)**
-  - Templates live in your repository
-  - Synced into the database via CLI
-  - Fully reproducible and auditable
-
-- **Secure template rendering**
-  - Jinja2 sandboxed environment
-  - Strict variable validation
-  - Header injection protection
-
-- **Persistent message lifecycle**
-  - Status tracking: queued, sending, sent, retrying, failed
-  - Idempotency guarantees
-  - Retry scheduling stored in the database
-
-- **Asynchronous delivery**
-  - Optional Celery integration
-  - Deterministic retry policy (default: 0s, 60s, 120s)
-  - Periodic retry and cleanup tasks
-
-- **Pluggable providers**
-  - Console backend (development)
-  - SMTP backend (generic)
-  - Designed for SES, SendGrid, Postmark, Mailgun
-
-- **High code quality**
-  - Strict typing (mypy)
-  - Formatting (black)
-  - Linting (ruff)
-  - Enforced test coverage (≥ 85%)
 
 ---
 
@@ -184,26 +142,13 @@ Templates are synced into the database using a CLI command:
 fapo sync-templates --path ./templates --upsert
 ```
 
-The command:
-
-- validates template manifests
-- computes content hashes
-- performs safe upserts
-- fails fast on inconsistencies
-
 Designed for CI/CD and production deployments.
 
 ---
 
 ## Development & Admin
 
-An optional admin interface is available **for development only**:
-
-- disabled by default
-- protected by environment checks
-- intended for inspection and debugging
-
-It is not required for production operation.
+An optional admin interface is available **for development only** and disabled by default. It is not required for production operation.
 
 ---
 
@@ -214,15 +159,6 @@ It is not required for production operation.
 - Template context is not persisted unless explicitly enabled
 - Credentials loaded only from environment variables
 - Fail-fast checks for unsafe configurations
-
----
-
-## Testing & Quality
-
-- pytest-based test suite
-- SQLite in-memory database for tests
-- Celery eager mode for deterministic execution
-- Enforced minimum coverage: **85%**
 
 ---
 
