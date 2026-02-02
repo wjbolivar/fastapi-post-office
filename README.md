@@ -174,9 +174,16 @@ Development install:
 pip install -e ".[dev,smtp,celery,admin]"
 ```
 
+### Database driver note
+
+FastAPI Post Office uses **SQLAlchemy sync**. Do **not** use async drivers like
+`postgresql+asyncpg`. Use a sync driver such as:
+
+- `postgresql+psycopg://...`
+- `sqlite+pysqlite:///...`
+
 ---
 
 ## License
 
 MIT
-

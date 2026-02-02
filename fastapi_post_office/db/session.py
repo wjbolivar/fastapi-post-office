@@ -5,6 +5,11 @@ from sqlalchemy.orm import Session, sessionmaker
 
 
 def create_engine_from_url(database_url: str, echo: bool = False) -> Engine:
+    if "+asyncpg" in database_url or database_url.startswith("postgresql+asyncpg"):
+        raise RuntimeError(
+            "Async SQLAlchemy drivers are not supported in FastAPI Post Office core. "
+            "Use a sync driver like postgresql+psycopg or sqlite+pysqlite."
+        )
     return create_engine(database_url, echo=echo, future=True)
 
 
