@@ -52,6 +52,10 @@ FastAPI Post Office
 - Asynchronous behavior is delegated to Celery
 - ORM: SQLAlchemy 2.x
 
+Async stack:
+- Optional async engine/session/repository/service are available
+- Backends remain sync and are executed in a threadpool from async service
+
 ---
 
 ## Template System
@@ -119,6 +123,33 @@ await fapo.send_now(message_id)
 
 ---
 
+## Async Usage (optional)
+
+```python
+from fastapi_post_office.db import (
+    AsyncEmailRepository,
+    create_async_engine_from_url,
+    create_async_session_factory,
+)
+from fastapi_post_office.service import AsyncEmailService
+
+engine = create_async_engine_from_url("sqlite+aiosqlite:///./fapo_async.db")
+session_factory = create_async_session_factory(engine)
+
+async with session_factory() as session:
+    repo = AsyncEmailRepository(session)
+    service = AsyncEmailService(repo)
+    await service.enqueue(
+        to=["user@example.com"],
+        subject="Hello",
+        html="<b>Hello</b>",
+        text="Hello",
+        idempotency_key="raw:user:123",
+    )
+```
+
+---
+
 ## Retry Policy
 
 Default retry schedule:
@@ -174,6 +205,12 @@ Development install:
 pip install -e ".[dev,smtp,celery,admin]"
 ```
 
+Async DB support (optional):
+
+```bash
+pip install "fastapi-post-office[db-sqlite-async]"
+```
+
 ### Database driver note
 
 FastAPI Post Office uses **SQLAlchemy sync**. Do **not** use async drivers like
@@ -181,6 +218,17 @@ FastAPI Post Office uses **SQLAlchemy sync**. Do **not** use async drivers like
 
 - `postgresql+psycopg://...`
 - `sqlite+pysqlite:///...`
+
+Async stack requires an async driver, e.g.:
+
+- `postgresql+asyncpg://...`
+- `sqlite+aiosqlite:///...`
+
+### Async production notes
+
+- Prefer a managed pool (e.g. `asyncpg` with default SQLAlchemy pooling)
+- Tune pool size and timeouts at the app level if you expect bursts
+- Keep async DB usage in the async stack (avoid mixing sync sessions)
 
 ---
 

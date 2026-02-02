@@ -6,10 +6,16 @@ from .config import settings
 
 if TYPE_CHECKING:
     from .providers import register_provider
-    from .service import EmailService
+    from .service import AsyncEmailService, EmailService
     from .webhooks import parse_suppression_events
 
-__all__ = ["EmailService", "parse_suppression_events", "register_provider", "settings"]
+__all__ = [
+    "AsyncEmailService",
+    "EmailService",
+    "parse_suppression_events",
+    "register_provider",
+    "settings",
+]
 
 
 def __getattr__(name: str) -> Any:
@@ -17,6 +23,10 @@ def __getattr__(name: str) -> Any:
         from .service import EmailService
 
         return EmailService
+    if name == "AsyncEmailService":
+        from .service import AsyncEmailService
+
+        return AsyncEmailService
     if name == "register_provider":
         from .providers import register_provider
 
