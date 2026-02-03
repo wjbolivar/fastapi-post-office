@@ -102,7 +102,7 @@ Repository = "https://github.com/wjbolivar/fastapi-post-office"
 Issues = "https://github.com/wjbolivar/fastapi-post-office/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["fastapi_post_office"]
+packages = ["fastapi_post_office", "fapo"]
 
 [tool.ruff]
 line-length = 100

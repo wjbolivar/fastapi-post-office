@@ -96,7 +96,11 @@ templates/
 ### Enqueue an email using a template
 
 ```python
-await fapo.enqueue_template(
+from fapo import EmailService
+
+service = EmailService(repo)
+
+await service.enqueue_template(
     template_name="welcome_user",
     to=["user@example.com"],
     context={"first_name": "William"},
@@ -104,10 +108,12 @@ await fapo.enqueue_template(
 )
 ```
 
+Tip: the recommended import is now the short alias `fapo`.
+
 ### Enqueue a raw email
 
 ```python
-await fapo.enqueue(
+await service.enqueue(
     to=["user@example.com"],
     subject="Hello",
     html="<b>Hello</b>",
@@ -118,7 +124,7 @@ await fapo.enqueue(
 ### Send immediately (without Celery)
 
 ```python
-await fapo.send_now(message_id)
+await service.send_now(message_id)
 ```
 
 ---
@@ -126,12 +132,12 @@ await fapo.send_now(message_id)
 ## Async Usage (optional)
 
 ```python
-from fastapi_post_office.db import (
+from fapo.db import (
     AsyncEmailRepository,
     create_async_engine_from_url,
     create_async_session_factory,
 )
-from fastapi_post_office.service import AsyncEmailService
+from fapo.service import AsyncEmailService
 
 engine = create_async_engine_from_url("sqlite+aiosqlite:///./fapo_async.db")
 session_factory = create_async_session_factory(engine)
@@ -146,6 +152,157 @@ async with session_factory() as session:
         text="Hello",
         idempotency_key="raw:user:123",
     )
+```
+
+---
+
+## Integration with existing SQLAlchemy + Alembic
+
+If your project already manages its own `Base`, engine, and Alembic migrations:
+
+### 1) Avoid `create_all()` in production
+
+Use Alembic for schema changes. Reserve `create_all()` for tests or local prototypes.
+
+### 2) Reuse your app session/engine
+
+Sync:
+
+```python
+from fapo.db.repository import EmailRepository
+from fapo.service import EmailService
+
+def send_email(session):
+    repo = EmailRepository(session)
+    service = EmailService(repo)
+    service.enqueue(...)
+```
+
+Async:
+
+```python
+from fapo.db.async_repository import AsyncEmailRepository
+from fapo.service import AsyncEmailService
+
+async def send_email(session):
+    repo = AsyncEmailRepository(session)
+    service = AsyncEmailService(repo)
+    await service.enqueue(...)
+```
+
+### 3) Alembic `target_metadata` (multiple bases)
+
+In your Alembic `env.py`:
+
+```python
+from app.db.base import Base as AppBase
+from fapo.db import Base as FapoBase
+
+target_metadata = [AppBase.metadata, FapoBase.metadata]
+```
+
+### 3.1) Create and run migrations (required)
+
+FastAPI Post Office does **not** run migrations automatically.  
+Your app must generate and apply migrations that include FAPO tables.
+
+```bash
+# create migration with your app + FAPO metadata
+alembic revision --autogenerate -m "add fapo tables"
+
+# apply migrations
+alembic upgrade head
+```
+
+### 3.2) Example `env.py` (sync)
+
+```python
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+from alembic import context
+
+from app.db.base import Base as AppBase
+from fapo.db import Base as FapoBase
+
+config = context.config
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+target_metadata = [AppBase.metadata, FapoBase.metadata]
+
+def run_migrations_offline():
+    url = config.get_main_option("sqlalchemy.url")
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    with context.begin_transaction():
+        context.run_migrations()
+
+def run_migrations_online():
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    with connectable.connect() as connection:
+        context.configure(connection=connection, target_metadata=target_metadata)
+        with context.begin_transaction():
+            context.run_migrations()
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+```
+
+### 3.3) Example `env.py` (async)
+
+```python
+import asyncio
+from logging.config import fileConfig
+
+from sqlalchemy import pool
+from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import async_engine_from_config
+from alembic import context
+
+from app.db.base import Base as AppBase
+from fapo.db import Base as FapoBase
+
+config = context.config
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+target_metadata = [AppBase.metadata, FapoBase.metadata]
+
+def do_run_migrations(connection: Connection):
+    context.configure(connection=connection, target_metadata=target_metadata)
+    with context.begin_transaction():
+        context.run_migrations()
+
+async def run_migrations_online():
+    connectable = async_engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+    await connectable.dispose()
+
+if context.is_offline_mode():
+    raise RuntimeError("Offline migrations are not supported for async env.py")
+else:
+    asyncio.run(run_migrations_online())
+```
+
+### 4) Admin portal
+
+Mount admin with **your** engine:
+
+```python
+from fapo.admin import mount_admin
+
+mount_admin(app, engine)
 ```
 
 ---
@@ -198,6 +355,8 @@ An optional admin interface is available **for development only** and disabled b
 ```bash
 pip install fastapi-post-office
 ```
+
+Note: the package exposes a short alias `fapo` for imports.
 
 Development install:
 
