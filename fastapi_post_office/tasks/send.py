@@ -1,29 +1,11 @@
 from __future__ import annotations
 
 import uuid
-from contextlib import contextmanager
 
-from fastapi_post_office.config import settings
-from fastapi_post_office.db import EmailRepository, create_engine_from_url, create_session_factory
+from fastapi_post_office.db import EmailRepository
 from fastapi_post_office.service import EmailService
 from fastapi_post_office.tasks.celery_app import get_celery_app
-
-
-@contextmanager
-def _session_scope():
-    engine = create_engine_from_url(settings.database_url)
-    session_factory = create_session_factory(engine)
-    session = session_factory()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-        engine.dispose()
-
+from fastapi_post_office.tasks.session import session_scope as _session_scope
 
 celery_app = get_celery_app()
 

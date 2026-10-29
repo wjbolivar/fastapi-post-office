@@ -2,18 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi_post_office.config import settings
-from fastapi_post_office.db.models import EmailMessage
-
+from .base import EmailPayload, SendResult
 from .http_base import HttpApiBackend
 
 
 class PostmarkBackend(HttpApiBackend):
     name = "postmark"
-    api_url = settings.postmark_base_url
+
+    def __init__(self, *, config=None):
+        super().__init__(config=config)
+        self.api_url = self.config.postmark_base_url
 
     def build_headers(self) -> dict[str, str]:
-        token = settings.postmark_server_token
+        token = self.config.postmark_server_token
         if not token:
             raise RuntimeError("POSTMARK_SERVER_TOKEN is required")
         return {
@@ -21,7 +22,7 @@ class PostmarkBackend(HttpApiBackend):
             "Content-Type": "application/json",
         }
 
-    def build_payload(self, message: EmailMessage) -> dict[str, Any]:
+    def build_payload(self, message: EmailPayload) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "From": message.from_email,
             "To": ", ".join(message.to_json),
@@ -36,3 +37,18 @@ class PostmarkBackend(HttpApiBackend):
         if message.html_body:
             payload["HtmlBody"] = message.html_body
         return payload
+
+    def parse_success(self, response) -> SendResult:
+        data = self.read_json(response)
+        code = data["ErrorCode"]
+        if code != 0:
+            return SendResult(
+                ok=False,
+                retryable=False,
+                error_code=f"postmark_{code}",
+                error_message="Postmark rejected message",
+            )
+        message_id = data["MessageID"]
+        if not isinstance(message_id, str) or not message_id or len(message_id) > 255:
+            raise ValueError("Invalid provider message ID")
+        return SendResult(ok=True, provider_message_id=message_id)

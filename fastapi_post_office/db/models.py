@@ -5,7 +5,17 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text, func
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -20,11 +30,12 @@ class EmailStatus(str, Enum):
     SENT = "SENT"
     RETRYING = "RETRYING"
     FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
 
 
 def _json_type() -> Any:
     # Prefer JSONB on Postgres, fallback to generic JSON elsewhere.
-    return JSONB().with_variant(JSON(), "sqlite")
+    return JSON().with_variant(JSONB(), "postgresql")
 
 
 class EmailTemplate(Base):
@@ -51,6 +62,7 @@ class EmailTemplate(Base):
 
 class EmailMessage(Base):
     __tablename__ = "email_messages"
+    __table_args__ = (Index("ix_email_messages_due", "status", "next_attempt_at"),)
 
     id: Mapped[uuid.UUID] = mapped_column(
         default=uuid.uuid4, primary_key=True, unique=True, nullable=False
@@ -71,6 +83,11 @@ class EmailMessage(Base):
     attempt_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     max_attempts: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    sending_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    claim_token: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
     last_error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     provider_message_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     idempotency_key: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
@@ -98,4 +115,36 @@ class EmailSuppression(Base):
     )
     provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
     metadata_json: Mapped[dict[str, Any] | None] = mapped_column(_json_type(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class EmailAttempt(Base):
+    __tablename__ = "email_attempts"
+    __table_args__ = (UniqueConstraint("message_id", "number", name="uq_email_attempt_number"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    message_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("email_messages.id", ondelete="CASCADE"), index=True
+    )
+    number: Mapped[int] = mapped_column(Integer)
+    claim_token: Mapped[uuid.UUID] = mapped_column(unique=True)
+    provider: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    outcome: Mapped[str] = mapped_column(String(32), default="STARTED")
+    error_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    provider_message_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+
+class EmailEvent(Base):
+    __tablename__ = "email_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    message_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("email_messages.id", ondelete="CASCADE"), index=True
+    )
+    action: Mapped[str] = mapped_column(String(32))
+    actor: Mapped[str] = mapped_column(String(255))
+    note: Mapped[str] = mapped_column(String(1000))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

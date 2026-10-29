@@ -2,18 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi_post_office.config import settings
-from fastapi_post_office.db.models import EmailMessage
-
+from .base import EmailPayload, SendResult
 from .http_base import HttpApiBackend
 
 
 class SendGridBackend(HttpApiBackend):
     name = "sendgrid"
-    api_url = settings.sendgrid_base_url
+
+    def __init__(self, *, config=None):
+        super().__init__(config=config)
+        self.api_url = self.config.sendgrid_base_url
 
     def build_headers(self) -> dict[str, str]:
-        api_key = settings.sendgrid_api_key
+        api_key = self.config.sendgrid_api_key
         if not api_key:
             raise RuntimeError("SENDGRID_API_KEY is required")
         return {
@@ -21,7 +22,7 @@ class SendGridBackend(HttpApiBackend):
             "Content-Type": "application/json",
         }
 
-    def build_payload(self, message: EmailMessage) -> dict[str, Any]:
+    def build_payload(self, message: EmailPayload) -> dict[str, Any]:
         personalization: dict[str, Any] = {
             "to": [{"email": email} for email in message.to_json],
         }
@@ -42,3 +43,7 @@ class SendGridBackend(HttpApiBackend):
             "subject": message.subject,
             "content": content,
         }
+
+    def parse_success(self, response) -> SendResult:
+        message_id = response.headers.get("X-Message-Id")
+        return SendResult(ok=True, provider_message_id=message_id)

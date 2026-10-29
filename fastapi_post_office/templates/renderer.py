@@ -3,14 +3,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from jinja2 import StrictUndefined
+from jinja2 import StrictUndefined, Undefined
 from jinja2.exceptions import TemplateError
 from jinja2.sandbox import SandboxedEnvironment
+
+from fastapi_post_office.exceptions import ValidationError
 
 from .loader import TemplateSource
 
 
-class RenderError(ValueError):
+class RenderError(ValidationError):
     pass
 
 
@@ -36,13 +38,14 @@ def render_template(
     if missing:
         raise RenderError(f"Missing required vars: {sorted(missing)}")
 
-    env = SandboxedEnvironment(undefined=StrictUndefined if strict else None, autoescape=False)
+    env = SandboxedEnvironment(undefined=StrictUndefined if strict else Undefined, autoescape=False)
 
     try:
         subject = env.from_string(source.subject_template).render(**context)
         html = None
         if source.html_template is not None:
-            html = env.from_string(source.html_template).render(**context)
+            html_env = env.overlay(autoescape=True)
+            html = html_env.from_string(source.html_template).render(**context)
         text = None
         if source.text_template is not None:
             text = env.from_string(source.text_template).render(**context)
