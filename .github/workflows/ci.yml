@@ -28,7 +28,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
+          # Upgrade runner tooling too: older Python images bundle vulnerable setuptools.
+          python -m pip install --upgrade pip "setuptools>=84.1.0"
           pip install -e ".[dev,smtp,celery,admin]"
 
       - name: Lint (ruff)
@@ -77,7 +78,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -m pip install --upgrade pip
+      - run: python -m pip install --upgrade pip "setuptools>=84.1.0"
       - run: pip install -e '.[dev,celery,admin,integration]'
       - run: pytest
       - run: python -m build
