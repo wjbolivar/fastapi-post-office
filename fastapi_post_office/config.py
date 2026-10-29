@@ -34,14 +34,16 @@ class Settings(BaseSettings):
 
     # Template rules
     strict_template_vars: bool = True
-    max_template_bytes: int = 256_000  # 256KB safety limit
+    max_template_bytes: int = Field(default=256_000, gt=0)  # 256KB safety limit
 
     # Retry policy (seconds)
-    max_attempts: int = 3
+    queue_batch_size: int = Field(default=100, ge=1, le=10000)
+    dispatch_interval_seconds: float = Field(default=10.0, gt=0)
+    max_attempts: int = Field(default=3, gt=0)
     retry_schedule_seconds: list[int] = Field(default_factory=lambda: [0, 60, 120])
 
     # Retention / logging
-    retention_days: int = 30
+    retention_days: int = Field(default=30, ge=0)
     log_body: bool = False
     persist_context: bool = False  # off by default (security)
 
@@ -53,22 +55,22 @@ class Settings(BaseSettings):
 
     # SMTP settings (only used by SMTP backend)
     smtp_host: str | None = None
-    smtp_port: int = 587
+    smtp_port: int = Field(default=587, ge=1, le=65535)
     smtp_username: str | None = None
-    smtp_password: str | None = None
+    smtp_password: str | None = Field(default=None, repr=False)
     smtp_starttls: bool = True
-    smtp_timeout_seconds: int = 10
+    smtp_timeout_seconds: int = Field(default=10, gt=0)
 
     # Celery settings
-    celery_broker_url: str | None = None
-    celery_backend_url: str | None = None
+    celery_broker_url: str | None = Field(default=None, repr=False)
+    celery_backend_url: str | None = Field(default=None, repr=False)
 
     # Provider API settings (v1.1)
-    sendgrid_api_key: str | None = None
+    sendgrid_api_key: str | None = Field(default=None, repr=False)
     sendgrid_base_url: str = "https://api.sendgrid.com/v3/mail/send"
-    postmark_server_token: str | None = None
+    postmark_server_token: str | None = Field(default=None, repr=False)
     postmark_base_url: str = "https://api.postmarkapp.com/email"
-    sendpulse_api_token: str | None = None
+    sendpulse_api_token: str | None = Field(default=None, repr=False)
     sendpulse_base_url: str = "https://api.sendpulse.com/smtp/emails"
     sendpulse_from_name: str | None = None
 

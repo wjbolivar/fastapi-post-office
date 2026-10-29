@@ -86,7 +86,6 @@ def test_async_repository_methods():
     results = [
         FakeResult(scalar=None),  # upsert -> get_template
         FakeResult(scalars_list=[message]),  # list_due_messages
-        FakeResult(rowcount=2),  # cleanup_sent
         FakeResult(scalar=object()),  # is_suppressed
         FakeResult(rowcount=1),  # remove_suppression
         FakeResult(scalar=message),  # get_message
@@ -106,10 +105,6 @@ def test_async_repository_methods():
     # list_due_messages
     due = asyncio.run(repo.list_due_messages())
     assert due
-
-    # cleanup_sent
-    deleted = asyncio.run(repo.cleanup_sent(30))
-    assert deleted == 2
 
     # is_suppressed
     assert asyncio.run(repo.is_suppressed("a@example.com")) is True

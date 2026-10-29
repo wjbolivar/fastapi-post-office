@@ -12,8 +12,12 @@ def test_mount_admin_disabled():
 def test_mount_admin_with_fake_sqladmin(monkeypatch):
     class FakeAdmin:
         def __init__(self, app, engine):
+            self.admin = self
             self.app = app
             self.engine = engine
+
+        def add_middleware(self, middleware):
+            self.middleware = middleware
 
         def add_view(self, view):
             return None

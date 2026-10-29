@@ -20,7 +20,11 @@ class DummySMTP:
     def __exit__(self, exc_type, exc, tb):
         return False
 
-    def starttls(self):
+    def starttls(self, *, context):
+        import ssl
+
+        assert context.check_hostname
+        assert context.verify_mode == ssl.CERT_REQUIRED
         self.started = True
 
     def login(self, user, password):

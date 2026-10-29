@@ -40,10 +40,10 @@ def test_http_backend_success(monkeypatch):
         def __exit__(self, exc_type, exc, tb):
             return False
 
-    def fake_urlopen(request, timeout=None):
+    def fake_urlopen(self, request, timeout=None):
         return DummyResponse()
 
-    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    monkeypatch.setattr("urllib.request.OpenerDirector.open", fake_urlopen)
 
     backend = Dummy()
     result = backend.send(_message())

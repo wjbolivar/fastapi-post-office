@@ -53,3 +53,12 @@ def template_dir(tmp_path: Path) -> Path:
     (tdir / "html.j2").write_text("<b>Hello {{ first_name }}</b>", encoding="utf-8")
     (tdir / "text.j2").write_text("Hello {{ first_name }}", encoding="utf-8")
     return root
+
+
+@pytest.fixture(autouse=True)
+def isolate_settings():
+    """Tests must not leak mutable global configuration to later cases."""
+    snapshot = settings.model_copy(deep=True)
+    yield
+    for name in type(settings).model_fields:
+        setattr(settings, name, getattr(snapshot, name))

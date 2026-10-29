@@ -12,9 +12,33 @@ from fastapi_post_office.service.idempotency import IdempotencyError
 
 class FakeAsyncRepo:
     def __init__(self):
+        self.session = self
+        self.new = self.dirty = self.deleted = set()
         self.messages = {}
         self.template = None
         self.suppressed = set()
+
+    async def refresh(self, message):
+        return None
+
+    async def claim_message(self, message_id):
+        message = self.messages.get(message_id)
+        if message is None:
+            return False
+        message.status = EmailStatus.SENDING
+        message.attempt_count += 1
+        return True
+
+    async def finish_attempt(self, message, result, next_attempt_at, duration_ms):
+        message.status = (
+            EmailStatus.SENT
+            if result.ok
+            else (
+                EmailStatus.FAILED
+                if message.attempt_count >= message.max_attempts
+                else EmailStatus.RETRYING
+            )
+        )
 
     async def get_template(self, name: str, active_only: bool = True):
         return self.template
